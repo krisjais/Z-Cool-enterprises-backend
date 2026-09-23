@@ -1,68 +1,77 @@
 const Product = require('../models/Product');
-const Category = require('../models/Category');
-const Brand = require('../models/Brand');
-const { uploadToCloudinary } = require('../middleware/upload');
-const fs = require('fs');
 
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
 exports.getProducts = async (req, res) => {
   try {
-    const { category, brand, search, featured, limit } = req.query;
+    const { category, brand, availability, search, limit } = req.query;
     const query = {};
 
-    if (category) {
-      const catObj = await Category.findOne({ slug: category });
-      if (catObj) query.category = catObj._id;
+    if (category && category !== 'all') {
+      query.category = new RegExp(`^${category.trim()}$`, 'i');
     }
 
-    if (brand) {
-      const brandObj = await Brand.findOne({ name: new RegExp(brand, 'i') });
-      if (brandObj) query.brand = brandObj._id;
+    if (brand && brand !== 'all') {
+      query.brand = new RegExp(`^${brand.trim()}$`, 'i');
     }
 
-    if (featured) {
-      query.featured = featured === 'true';
+    if (availability && availability !== 'all') {
+      query.availability = availability;
     }
 
     if (search) {
+      const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
+        { name: searchRegex },
+        { code: searchRegex },
+        { brand: searchRegex },
+        { category: searchRegex },
+        { type: searchRegex },
       ];
     }
 
-    let productsQuery = Product.find(query).populate('category').populate('brand');
+    let productsQuery = Product.find(query).sort({ createdAt: -1 });
 
     if (limit) {
-      productsQuery = productsQuery.limit(parseInt(limit));
+      productsQuery = productsQuery.limit(parseInt(limit, 10));
     }
 
-    const products = await productsQuery.sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: products.length, data: products });
+    const products = await productsQuery;
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get single product by slug
-// @route   GET /api/products/:slug
+// @desc    Get single product by id or slug
+// @route   GET /api/products/:idOrSlug
 // @access  Public
 exports.getProductBySlug = async (req, res) => {
   try {
-    const product = await Product.findOne({ slug: req.params.slug })
-      .populate('category')
-      .populate('brand');
+    const identifier = req.params.idOrSlug;
+    const cleanId = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const idRegex = new RegExp(`^${cleanId}$`, 'i');
+    const product = await Product.findOne({
+      $or: [
+        { id: idRegex },
+        { slug: idRegex },
+        { code: idRegex },
+      ],
+    });
 
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Find related products (same category)
+    // Related products in the same category
     const related = await Product.find({
-      category: product.category._id,
-      _id: { $ne: product._id }
+      category: product.category,
+      _id: { $ne: product._id },
     }).limit(4);
 
     res.status(200).json({ success: true, data: product, related });
@@ -76,50 +85,70 @@ exports.getProductBySlug = async (req, res) => {
 // @access  Private (Admin)
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, category, brand, featured, inStock, specs } = req.body;
+    const {
+      code,
+      name,
+      brand,
+      tagline,
+      category,
+      type,
+      condition,
+      availability,
+      images,
+      description,
+      voltage,
+      displacement,
+      refrigerant,
+      application,
+      specs,
+      compatibility,
+      compatDetails,
+    } = req.body;
 
-    // Check if product name already exists
-    const exists = await Product.findOne({ name });
+    if (!code || !name || !brand || !category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product code, name, brand, and category are required.',
+      });
+    }
+
+    // Check if code or name already exists
+    const exists = await Product.findOne({
+      $or: [{ code: code.trim() }, { name: name.trim() }],
+    });
+
     if (exists) {
-      return res.status(400).json({ success: false, message: 'Product name already exists' });
+      return res.status(400).json({
+        success: false,
+        message: 'Product with this code or name already exists.',
+      });
     }
 
-    // Process files
-    const imagesUrls = [];
-    let datasheetUrl = '';
-
-    if (req.files) {
-      if (req.files.images) {
-        for (const file of req.files.images) {
-          const url = await uploadToCloudinary(file.path, 'z_cool_tech/products');
-          imagesUrls.push(url);
-        }
-      }
-      if (req.files.datasheet) {
-        datasheetUrl = await uploadToCloudinary(req.files.datasheet[0].path, 'z_cool_tech/datasheets');
-      }
-    }
-
-    // Handle specs map parsing from frontend stringified JSON
-    let parsedSpecs = {};
-    if (specs) {
-      try {
-        parsedSpecs = typeof specs === 'string' ? JSON.parse(specs) : specs;
-      } catch (e) {
-        console.error('Specs parsing error:', e);
-      }
-    }
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
 
     const product = await Product.create({
-      name,
-      description,
-      category,
-      brand: brand || null,
-      images: imagesUrls,
-      datasheet: datasheetUrl,
-      specs: parsedSpecs,
-      featured: featured === 'true',
-      inStock: inStock !== 'false',
+      id: slug,
+      slug,
+      code: code.trim(),
+      name: name.trim(),
+      brand: brand.trim(),
+      tagline: tagline || '',
+      category: category.trim(),
+      type: type || 'Hermetic Scroll',
+      condition: condition || 'Refurbished & Pressure Tested',
+      availability: availability || 'IN STOCK',
+      images: Array.isArray(images) ? images : (images ? [images] : []),
+      description: description || '',
+      voltage: voltage || '',
+      displacement: displacement || '',
+      refrigerant: refrigerant || '',
+      application: application || '',
+      specs: specs || {},
+      compatibility: Array.isArray(compatibility) ? compatibility : [],
+      compatDetails: compatDetails || {},
     });
 
     res.status(201).json({ success: true, data: product });
@@ -133,60 +162,47 @@ exports.createProduct = async (req, res) => {
 // @access  Private (Admin)
 exports.updateProduct = async (req, res) => {
   try {
-    let product = await Product.findById(req.params.id);
+    const identifier = req.params.id;
+    let product = await Product.findOne({
+      $or: [
+        { _id: identifier.match(/^[0-9a-fA-F]{24}$/) ? identifier : null },
+        { id: identifier },
+        { slug: identifier },
+      ],
+    });
+
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    const { name, description, category, brand, featured, inStock, specs, existingImages } = req.body;
+    const updateFields = [
+      'code',
+      'name',
+      'brand',
+      'tagline',
+      'category',
+      'type',
+      'condition',
+      'availability',
+      'images',
+      'description',
+      'voltage',
+      'displacement',
+      'refrigerant',
+      'application',
+      'specs',
+      'compatibility',
+      'compatDetails',
+    ];
 
-    // Process file updates
-    let imagesUrls = [];
-    if (existingImages) {
-      // Retain already uploaded images selected by user
-      imagesUrls = typeof existingImages === 'string' ? [existingImages] : existingImages;
-    }
-
-    let datasheetUrl = product.datasheet;
-
-    if (req.files) {
-      if (req.files.images) {
-        for (const file of req.files.images) {
-          const url = await uploadToCloudinary(file.path, 'z_cool_tech/products');
-          imagesUrls.push(url);
-        }
+    updateFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
       }
-      if (req.files.datasheet) {
-        datasheetUrl = await uploadToCloudinary(req.files.datasheet[0].path, 'z_cool_tech/datasheets');
-      }
-    }
-
-    // Handle specs parsing
-    let parsedSpecs = product.specs;
-    if (specs) {
-      try {
-        parsedSpecs = typeof specs === 'string' ? JSON.parse(specs) : specs;
-      } catch (e) {
-        console.error('Specs parsing error:', e);
-      }
-    }
-
-    const updateData = {
-      name: name || product.name,
-      description: description || product.description,
-      category: category || product.category,
-      brand: brand || product.brand,
-      images: imagesUrls,
-      datasheet: datasheetUrl,
-      specs: parsedSpecs,
-      featured: featured !== undefined ? featured === 'true' : product.featured,
-      inStock: inStock !== undefined ? inStock !== 'false' : product.inStock,
-    };
-
-    product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
     });
+
+    product.updatedAt = Date.now();
+    await product.save();
 
     res.status(200).json({ success: true, data: product });
   } catch (error) {
@@ -199,13 +215,20 @@ exports.updateProduct = async (req, res) => {
 // @access  Private (Admin)
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const identifier = req.params.id;
+    const product = await Product.findOneAndDelete({
+      $or: [
+        { _id: identifier.match(/^[0-9a-fA-F]{24}$/) ? identifier : null },
+        { id: identifier },
+        { slug: identifier },
+      ],
+    });
+
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    await Product.findByIdAndDelete(req.params.id);
-    res.status(200).json({ success: true, data: {} });
+    res.status(200).json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
