@@ -20,8 +20,13 @@ exports.loginAdmin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide username and password' });
     }
 
-    // Check for admin
-    const admin = await Admin.findOne({ username }).select('+password');
+    // Check for admin (accept either username or email)
+    const admin = await Admin.findOne({
+      $or: [
+        { username: username.trim() },
+        { email: username.trim().toLowerCase() },
+      ],
+    }).select('+password');
     if (!admin) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
