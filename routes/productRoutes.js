@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getProducts,
   getProductBySlug,
+  getProductsByCategorySlug,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -12,6 +13,10 @@ const { protect } = require('../middleware/auth');
 router.route('/')
   .get(getProducts)
   .post(protect, createProduct);
+
+// Category specific endpoint
+router.route('/category/:slug')
+  .get(getProductsByCategorySlug);
 
 router.route('/:idOrSlug')
   .get(getProductBySlug);
