@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const { verifyToken } = require('../utils/token');
 const Admin = require('../models/Admin');
 
 const protect = async (req, res, next) => {
@@ -19,7 +19,7 @@ const protect = async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'zcooltech_super_secret_jwt_key_2026');
+    const decoded = verifyToken(token);
 
     // Attach admin to request
     req.admin = await Admin.findById(decoded.id);

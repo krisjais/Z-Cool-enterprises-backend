@@ -1,12 +1,5 @@
 const Admin = require('../models/Admin');
-const jwt = require('jsonwebtoken');
-
-// Generate Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'zcooltech_super_secret_jwt_key_2026', {
-    expiresIn: process.env.JWT_EXPIRE || '30d',
-  });
-};
+const { signToken } = require('../utils/token');
 
 // @desc    Auth admin & get token
 // @route   POST /api/auth/login
@@ -38,7 +31,7 @@ exports.loginAdmin = async (req, res) => {
     }
 
     // Create token
-    const token = generateToken(admin._id);
+    const token = signToken({ id: admin._id });
 
     res.status(200).json({
       success: true,

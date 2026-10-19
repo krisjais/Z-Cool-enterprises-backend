@@ -15,6 +15,16 @@ const errorHandler = require('./middleware/errorHandler');
 // Load environment variables
 dotenv.config();
 
+// Enforce Critical Security Environment Configuration
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 32) {
+    console.error('[FATAL SECURITY ERROR] JWT_SECRET must be defined and at least 32 characters long in production.');
+    process.exit(1);
+  }
+} else if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
+  console.warn('[SECURITY WARNING] JWT_SECRET is not set in development .env. Set JWT_SECRET to enable secure authentication.');
+}
+
 // Connect to Database
 connectDB();
 

@@ -17,17 +17,21 @@ async function sync() {
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB:', mongoUri);
 
-    // 1. Ensure Admin exists
+    // 1. Check Admin status
     const adminCount = await Admin.countDocuments();
     if (adminCount === 0) {
-      await Admin.create({
-        username: 'admin',
-        email: 'admin@zcooltech.com',
-        password: 'password123', // Will be hashed by pre-save bcrypt hook
-      });
-      console.log('Seeded initial admin: admin / password123 (bcrypt-hashed)');
+      if (process.env.INITIAL_ADMIN_EMAIL && process.env.INITIAL_ADMIN_PASSWORD) {
+        await Admin.create({
+          username: process.env.INITIAL_ADMIN_USERNAME || 'admin',
+          email: process.env.INITIAL_ADMIN_EMAIL.trim().toLowerCase(),
+          password: process.env.INITIAL_ADMIN_PASSWORD,
+        });
+        console.log(`[SECURITY] Initial administrator provisioned from environment for ${process.env.INITIAL_ADMIN_EMAIL}`);
+      } else {
+        console.log('[SECURITY NOTICE] No administrator accounts found in database. Run "npm run create-admin" to provision an administrator securely.');
+      }
     } else {
-      console.log(`Admin user already exists (count: ${adminCount})`);
+      console.log(`[SECURITY] Administrator accounts verified (existing count: ${adminCount})`);
     }
 
     // 2. Import catalog products from frontend data file

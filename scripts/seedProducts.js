@@ -132,19 +132,21 @@ async function seedProducts() {
   try {
     await connectDB();
 
-    // 1. Seed / Ensure Admin user exists
-    let adminCreated = false;
-    const existingAdmin = await Admin.findOne({ username: 'admin' });
-    if (!existingAdmin) {
-      await Admin.create({
-        username: 'admin',
-        email: 'admin@zcooltech.com',
-        password: 'password123',
-      });
-      console.log('✓ Initial Admin created: admin / password123');
-      adminCreated = true;
+    // 1. Check Admin status
+    const adminCount = await Admin.countDocuments();
+    if (adminCount === 0) {
+      if (process.env.INITIAL_ADMIN_EMAIL && process.env.INITIAL_ADMIN_PASSWORD) {
+        await Admin.create({
+          username: process.env.INITIAL_ADMIN_USERNAME || 'admin',
+          email: process.env.INITIAL_ADMIN_EMAIL.trim().toLowerCase(),
+          password: process.env.INITIAL_ADMIN_PASSWORD,
+        });
+        console.log(`[SECURITY] Initial admin provisioned from environment for ${process.env.INITIAL_ADMIN_EMAIL}`);
+      } else {
+        console.log('[SECURITY NOTICE] No admin accounts in database. Use "npm run create-admin" to provision an administrator.');
+      }
     } else {
-      console.log('✓ Admin user already exists: ' + existingAdmin.username);
+      console.log(`[SECURITY] Administrator accounts verified (existing count: ${adminCount})`);
     }
 
     // 2. Seed / Upsert the 10 Categories without destructive deletion

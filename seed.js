@@ -12,19 +12,27 @@ const seedData = async () => {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/z-cool-tech');
     console.log('MongoDB connected for seeding...');
 
-    // Clear existing data
-    await Admin.deleteMany();
+    // Clear category/brand collection data (preserve admin accounts)
     await Category.deleteMany();
     await Brand.deleteMany();
-    console.log('Existing collection data wiped.');
+    console.log('Category and Brand collection data refreshed.');
 
-    // Seed Admin
-    const admin = await Admin.create({
-      username: 'admin',
-      email: 'admin@zcooltech.com',
-      password: 'password123', // Will be hashed automatically by the Admin.js model pre-save hook
-    });
-    console.log(`Admin user seeded: username="admin", password="password123"`);
+    // Check Admin status without wiping
+    const adminCount = await Admin.countDocuments();
+    if (adminCount === 0) {
+      if (process.env.INITIAL_ADMIN_EMAIL && process.env.INITIAL_ADMIN_PASSWORD) {
+        await Admin.create({
+          username: process.env.INITIAL_ADMIN_USERNAME || 'admin',
+          email: process.env.INITIAL_ADMIN_EMAIL.trim().toLowerCase(),
+          password: process.env.INITIAL_ADMIN_PASSWORD,
+        });
+        console.log(`[SECURITY] Initial administrator provisioned from environment for ${process.env.INITIAL_ADMIN_EMAIL}`);
+      } else {
+        console.log('[SECURITY NOTICE] No administrator accounts found in database. Run "npm run create-admin" to provision an administrator securely.');
+      }
+    } else {
+      console.log(`[SECURITY] Preserved ${adminCount} existing administrator account(s).`);
+    }
 
     // Seed Categories
     const categories = await Category.create([

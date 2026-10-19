@@ -15,7 +15,7 @@ exports.apiLimiter = rateLimit({
 // Stricter rate limiter for authentication routes
 exports.authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // Limit each IP to 5 login requests per hour
+  max: process.env.NODE_ENV === 'production' ? 5 : 50, // Limit each IP to 5 login requests per hour in production
   message: {
     success: false,
     message: 'Too many login attempts. Please try again after an hour.',

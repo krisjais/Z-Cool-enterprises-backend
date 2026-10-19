@@ -6,6 +6,7 @@ const categoryRoutes = require('./categoryRoutes');
 const orderRoutes = require('./orderRoutes');
 const shipmentRoutes = require('./shipmentRoutes');
 const uploadRoutes = require('./uploadRoutes');
+const inquiryRoutes = require('./inquiryRoutes');
 
 // Mount sub-routers
 router.use('/auth', authRoutes);
@@ -14,6 +15,8 @@ router.use('/categories', categoryRoutes);
 router.use('/orders', orderRoutes);
 router.use('/shipments', shipmentRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/inquiries', inquiryRoutes);
+router.use('/contact', inquiryRoutes);
 
 // General health-check endpoint
 router.get('/health', (req, res) => {
