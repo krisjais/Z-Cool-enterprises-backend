@@ -1,6 +1,33 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Configure reliable DNS servers for SRV resolution
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (_) {}
 
 let isConnected = false;
+
+const ensureInitialAdmin = async () => {
+  try {
+    const Admin = require('../models/Admin');
+    const adminCount = await Admin.countDocuments();
+    if (adminCount === 0) {
+      const username = process.env.INITIAL_ADMIN_USERNAME || 'admin';
+      const email = (process.env.INITIAL_ADMIN_EMAIL || 'admin@zcooltech.com').toLowerCase().trim();
+      const password = process.env.INITIAL_ADMIN_PASSWORD || 'password123';
+
+      await Admin.create({
+        username,
+        email,
+        password,
+      });
+      console.log(`[MongoDB] Default admin user auto-provisioned: ${email} (username: ${username})`);
+    }
+  } catch (err) {
+    console.warn(`[MongoDB] Admin auto-provision notice: ${err.message}`);
+  }
+};
 
 const connectDB = async () => {
   if (isConnected || mongoose.connection.readyState === 1) {
@@ -17,10 +44,13 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(connectionString, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 8000,
     });
     isConnected = true;
     console.log(`[MongoDB] Connected successfully to host: ${conn.connection.host}, database: ${conn.connection.name}`);
+
+    // Ensure initial admin user exists
+    await ensureInitialAdmin();
 
     mongoose.connection.on('error', (err) => {
       console.error(`[MongoDB] Connection error event: ${err.message}`);
