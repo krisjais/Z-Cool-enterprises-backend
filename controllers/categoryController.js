@@ -211,6 +211,7 @@ exports.getCategories = async (req, res) => {
         description: cat.description,
         image: cat.image,
         featured: cat.featured,
+        isActive: cat.isActive !== undefined ? cat.isActive : true,
         sortOrder: cat.sortOrder !== undefined ? cat.sortOrder : 0,
         productCount: count,
         createdAt: cat.createdAt,
@@ -275,7 +276,7 @@ exports.getCategoryBySlug = async (req, res) => {
  */
 exports.createCategory = async (req, res) => {
   try {
-    const { name, slug, description, image, featured, sortOrder } = req.body;
+    const { name, slug, description, image, featured, isActive, sortOrder } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Category name is required' });
@@ -312,6 +313,7 @@ exports.createCategory = async (req, res) => {
       description: description ? description.trim() : '',
       image: image || '',
       featured: Boolean(featured),
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
       sortOrder: Number(finalOrder) || 0,
     });
 
@@ -345,7 +347,7 @@ exports.updateCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
 
-    const { name, slug, description, image, featured, sortOrder } = req.body;
+    const { name, slug, description, image, featured, isActive, sortOrder } = req.body;
     const oldName = category.name;
 
     if (name && name.trim()) {
@@ -379,6 +381,7 @@ exports.updateCategory = async (req, res) => {
     if (description !== undefined) category.description = description.trim();
     if (image !== undefined) category.image = image;
     if (featured !== undefined) category.featured = Boolean(featured);
+    if (isActive !== undefined) category.isActive = Boolean(isActive);
     if (sortOrder !== undefined && sortOrder !== '') category.sortOrder = Number(sortOrder) || 0;
 
     await category.save();

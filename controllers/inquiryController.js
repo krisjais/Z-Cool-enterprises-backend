@@ -22,7 +22,24 @@ exports.submitInquiry = async (req, res) => {
       model,
       quantity,
       application,
+      consentGiven,
+      consent,
+      source,
     } = req.body;
+
+    const isConsentGiven =
+      consentGiven === true ||
+      consentGiven === 'true' ||
+      consent === true ||
+      consent === 'true';
+
+    // Enforce consent for web submissions with source identifier
+    if (source && !isConsentGiven) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please acknowledge the Privacy Policy before submitting your enquiry.',
+      });
+    }
 
     // 1. Mandatory field validation
     if (!name || name.trim().length < 2) {
@@ -127,6 +144,8 @@ exports.submitInquiry = async (req, res) => {
         application: (application || '').trim(),
         nameplatePhoto,
       },
+      consentGiven: isConsentGiven,
+      consentTimestamp: isConsentGiven ? new Date() : null,
       status: 'pending',
       sourceIp: req.ip || req.connection?.remoteAddress || '',
     });

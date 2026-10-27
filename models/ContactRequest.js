@@ -59,6 +59,14 @@ const contactRequestSchema = new mongoose.Schema(
         mimetype: { type: String, default: '' },
       },
     },
+    consentGiven: {
+      type: Boolean,
+      default: false,
+    },
+    consentTimestamp: {
+      type: Date,
+      default: null,
+    },
     status: {
       type: String,
       enum: ['pending', 'in-progress', 'resolved'],

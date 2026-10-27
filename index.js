@@ -37,10 +37,16 @@ app.use(
   })
 );
 // Configure CORS with normalized origin checking (stripping trailing slashes)
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
-  .split(',')
-  .map((url) => url.trim().replace(/\/+$/, ''))
-  .filter(Boolean);
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'https://z-cool-enterprises.vercel.app',
+  ...(process.env.CLIENT_URL || '')
+    .split(',')
+    .map((url) => url.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
+];
 
 app.use(
   cors({
@@ -51,7 +57,7 @@ app.use(
       const normalizedOrigin = origin.replace(/\/+$/, '');
       const isAllowed =
         allowedOrigins.includes(normalizedOrigin) ||
-        allowedOrigins.includes('*') ||
+        normalizedOrigin.endsWith('.vercel.app') ||
         (process.env.NODE_ENV !== 'production' && normalizedOrigin.includes('localhost'));
 
       if (isAllowed) {
