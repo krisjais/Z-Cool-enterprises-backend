@@ -1,0 +1,94 @@
+{
+  "productId": "danfoss-sm110s4ea",
+  "modelNumber": "SM110S4EA",
+  "oemCode": "SM110-4EAG",
+  "generatedAt": "2026-10-28T12:17:13.760Z",
+  "primaryImage": {
+    "url": "https://res.cloudinary.com/ot9atptn/image/upload/v1793188138/z-cool/products/danfoss_sm110s4ea_official.jpg",
+    "publicId": "z-cool/products/danfoss_sm110s4ea_official"
+  },
+  "imagesCount": 5,
+  "manifest": [
+    {
+      "position": 1,
+      "type": "primary",
+      "label": "Official Manufacturer Product Render",
+      "url": "https://res.cloudinary.com/ot9atptn/image/upload/v1793188138/z-cool/products/danfoss_sm110s4ea_official.jpg",
+      "publicId": "z-cool/products/danfoss_sm110s4ea_official",
+      "bytes": 61917,
+      "source": "Danfoss Official Product Datasheet (SM110-4EAG)",
+      "provenance": "Official Danfoss OEM technical publication",
+      "rightsStatus": "Manufacturer technical product documentation asset"
+    },
+    {
+      "position": 2,
+      "type": "gallery",
+      "label": "Workshop Physical Unit Photo #1",
+      "url": "https://res.cloudinary.com/ot9atptn/image/upload/v1793188821/z-cool/products/danfoss_sm110s4ea_supplier_1.jpg",
+      "publicId": "z-cool/products/danfoss_sm110s4ea_supplier_1",
+      "bytes": 95225,
+      "source": "IndiaMART listing photo (Hashmi Refrigeration)",
+      "provenance": "https://5.imimg.com/data5/SELLER/Default/2026/5/611908097/JX/XH/YT/85009421/whatsapp-image-2024-12-06-at-6-32-51-pm-2.jpeg",
+      "rightsStatus": "Commercial reuse rights unverified - Marketplace listing asset preserved for reference/verification"
+    },
+    {
+      "position": 3,
+      "type": "gallery",
+      "label": "Workshop Physical Unit Photo #2",
+      "url": "https://res.cloudinary.com/ot9atptn/image/upload/v1793188822/z-cool/products/danfoss_sm110s4ea_supplier_2.jpg",
+      "publicId": "z-cool/products/danfoss_sm110s4ea_supplier_2",
+      "bytes": 204747,
+      "source": "IndiaMART listing photo (Hashmi Refrigeration)",
+      "provenance": "https://5.imimg.com/data5/SELLER/Default/2024/12/471157977/AE/WH/AQ/85009421/whatsapp-image-2024-12-06-at-6-32-51-pm.jpeg",
+      "rightsStatus": "Commercial reuse rights unverified - Marketplace listing asset preserved for reference/verification"
+    },
+    {
+      "position": 4,
+      "type": "gallery",
+      "label": "Workshop Physical Unit Photo #3",
+      "url": "https://res.cloudinary.com/ot9atptn/image/upload/v1793188823/z-cool/products/danfoss_sm110s4ea_supplier_3.jpg",
+      "publicId": "z-cool/products/danfoss_sm110s4ea_supplier_3",
+      "bytes": 231578,
+      "source": "IndiaMART listing photo (Hashmi Refrigeration)",
+      "provenance": "https://5.imimg.com/data5/SELLER/Default/2024/12/471157968/CS/ID/VB/85009421/whatsapp-image-2024-12-06-at-6-32-52-pm.jpeg",
+      "rightsStatus": "Commercial reuse rights unverified - Marketplace listing asset preserved for reference/verification"
+    },
+    {
+      "position": 5,
+      "type": "gallery",
+      "label": "Workshop Physical Unit Photo #4",
+      "url": "https://res.cloudinary.com/ot9atptn/image/upload/v1793188824/z-cool/products/danfoss_sm110s4ea_supplier_4.jpg",
+      "publicId": "z-cool/products/danfoss_sm110s4ea_supplier_4",
+      "bytes": 223220,
+      "source": "IndiaMART listing photo (Hashmi Refrigeration)",
+      "provenance": "https://5.imimg.com/data5/SELLER/Default/2024/12/471157966/UI/KA/YT/85009421/whatsapp-image-2024-12-06-at-6-32-52-pm-1.jpeg",
+      "rightsStatus": "Commercial reuse rights unverified - Marketplace listing asset preserved for reference/verification"
+    }
+  ],
+  "datasheet": {
+    "filename": "Danfoss-SM110S4EA-Datasheet.pdf",
+    "model": "SM110S4EA",
+    "oemModelCode": "SM110-4EAG",
+    "fileType": "application/pdf",
+    "size": "741 KB",
+    "bytes": 758720,
+    "url": "/datasheets/Danfoss-SM110S4EA-Datasheet.pdf",
+    "localUrl": "/uploads/datasheets/Danfoss-SM110S4EA-Datasheet.pdf",
+    "cloudinaryUrl": "https://res.cloudinary.com/ot9atptn/raw/upload/v1793188137/z-cool/datasheets/Danfoss_SM110S4EA_Datasheet.pdf",
+    "cloudinaryPublicId": "z-cool/datasheets/Danfoss_SM110S4EA_Datasheet.pdf",
+    "verifiedAt": "2026-10-28T12:17:13.742Z"
+  },
+  "sourceProvenance": {
+    "marketplace": "IndiaMART",
+    "listingPrice": 24000,
+    "currency": "INR",
+    "priceDisplay": "₹ 2*** (free trial)",
+    "unconfirmedPrice": true,
+    "verificationStatus": "Unconfirmed seller price (₹24,000) — Request quote required for official procurement pricing",
+    "sellerName": "Hashmi Refrigeration",
+    "listingUrl": "https://www.indiamart.com/proddetail/danfoss-sm110s4ea-scroll-compressor-2855410547248.html",
+    "oemUrl": "https://designcenter.danfoss.com/products/climate-solutions-for-cooling/compressors/hermetic-scroll-compressors/sm/p/SM110-4EAG",
+    "pdfDatasheetUrl": "/datasheets/Danfoss-SM110S4EA-Datasheet.pdf",
+    "importedAt": "2026-10-28T12:17:13.743Z"
+  }
+}
