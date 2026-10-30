@@ -136,6 +136,8 @@ exports.getProducts = async (req, res) => {
 
     if (status && status !== 'all') {
       query.status = status;
+    } else if (!status) {
+      query.status = 'Active';
     }
 
     if (featured !== undefined) {

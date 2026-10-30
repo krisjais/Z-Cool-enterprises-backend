@@ -162,7 +162,7 @@ const INITIAL_CATEGORIES = [
  */
 exports.getCategories = async (req, res) => {
   try {
-    let categories = await Category.find().sort({ sortOrder: 1, name: 1 });
+    let categories = await Category.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
 
     // Auto-seed default categories if empty
     if (categories.length === 0) {
@@ -201,8 +201,9 @@ exports.getCategories = async (req, res) => {
       matchFilter = { $or: orConditions };
     }
 
+    const activeFilter = isReviewMode ? matchFilter : { status: 'Active' };
     const productCounts = await Product.aggregate([
-      ...(isReviewMode ? [{ $match: matchFilter }] : []),
+      { $match: activeFilter },
       {
         $group: {
           _id: { $toLower: { $trim: { input: '$category' } } },
@@ -218,7 +219,7 @@ exports.getCategories = async (req, res) => {
       }
     });
 
-    const totalProducts = isReviewMode ? await Product.countDocuments(matchFilter) : await Product.countDocuments();
+    const totalProducts = await Product.countDocuments(activeFilter);
 
     const data = categories.map((cat) => {
       const lowerName = cat.name.toLowerCase().trim();
