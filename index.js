@@ -7,13 +7,13 @@ const morgan = require('morgan');
 const path = require('path');
 const dotenv = require('dotenv');
 
+// Load environment variables immediately before local modules
+dotenv.config();
+
 const connectDB = require('./config/db');
 const { apiLimiter } = require('./middleware/rateLimiter');
 const mainRoutes = require('./routes/main');
 const errorHandler = require('./middleware/errorHandler');
-
-// Load environment variables
-dotenv.config();
 
 // Enforce Critical Security Environment Configuration
 if (process.env.NODE_ENV === 'production') {
@@ -110,3 +110,5 @@ process.on('unhandledRejection', (err, promise) => {
   // Close server & exit process
   server.close(() => process.exit(1));
 });
+
+// Watch trigger: connected to confirmed local database

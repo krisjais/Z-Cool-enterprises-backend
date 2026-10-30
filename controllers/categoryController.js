@@ -175,7 +175,34 @@ exports.getCategories = async (req, res) => {
     }
 
     // Compute dynamic product counts from MongoDB
+    function getReviewModeSlugs() {
+      const mode = (process.env.CATALOGUE_REVIEW_MODE || '').trim().toLowerCase();
+      if (!mode || mode === 'false' || mode === 'off' || mode === '0') return null;
+      const slugs = mode.split(',').map((s) => s.trim()).filter(Boolean);
+      return slugs.length > 0 ? slugs : null;
+    }
+    const reviewSlugs = getReviewModeSlugs();
+    const isReviewMode = reviewSlugs !== null;
+
+    let matchFilter = {};
+    if (isReviewMode) {
+      const orConditions = [];
+      reviewSlugs.forEach((slug) => {
+        const clean = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const rx = new RegExp(`^${clean}$`, 'i');
+        orConditions.push(
+          { id: rx },
+          { slug: rx },
+          { code: rx },
+          { modelNumber: rx },
+          { catalogCode: rx }
+        );
+      });
+      matchFilter = { $or: orConditions };
+    }
+
     const productCounts = await Product.aggregate([
+      ...(isReviewMode ? [{ $match: matchFilter }] : []),
       {
         $group: {
           _id: { $toLower: { $trim: { input: '$category' } } },
@@ -191,7 +218,7 @@ exports.getCategories = async (req, res) => {
       }
     });
 
-    const totalProducts = await Product.countDocuments();
+    const totalProducts = isReviewMode ? await Product.countDocuments(matchFilter) : await Product.countDocuments();
 
     const data = categories.map((cat) => {
       const lowerName = cat.name.toLowerCase().trim();

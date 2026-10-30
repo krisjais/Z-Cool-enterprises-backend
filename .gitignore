@@ -45,3 +45,9 @@ next-env.d.ts
 # uploads
 /uploads/*
 !/uploads/.gitkeep
+
+# temp images & backups
+/temp_images/
+/backups/
+scripts/*.pdf
+scratch_*.js

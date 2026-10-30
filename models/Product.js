@@ -157,6 +157,38 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
       default: {},
     },
+    coolingCapacity: {
+      type: String,
+      default: '',
+    },
+    catalogCode: {
+      type: String,
+      default: '',
+    },
+    verificationStatus: {
+      type: String,
+      default: 'Verified OEM Match',
+    },
+    imageDisclaimer: {
+      type: String,
+      default: '',
+    },
+    datasheet: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    downloads: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    source: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    imageManifest: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
     specs: {
       type: mongoose.Schema.Types.Mixed,
       default: {},

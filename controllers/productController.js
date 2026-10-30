@@ -3,6 +3,42 @@ const Category = require('../models/Category');
 const { deleteMultipleImagesFromCloudinary } = require('../services/cloudinaryService');
 
 /**
+ * Reversible Catalogue Review Mode:
+ * When CATALOGUE_REVIEW_MODE=danfoss-sm110s4ea is configured, public catalog listings,
+ * category filters, and related products restrict visibility exclusively to the Danfoss product.
+ * Direct lookups by ID/slug remain accessible for verification, and zero records are deleted.
+ */
+function getReviewModeSlugs() {
+  const mode = (process.env.CATALOGUE_REVIEW_MODE || '').trim().toLowerCase();
+  if (!mode || mode === 'false' || mode === 'off' || mode === '0') return null;
+  const slugs = mode.split(',').map((s) => s.trim()).filter(Boolean);
+  return slugs.length > 0 ? slugs : null;
+}
+
+function isReviewModeActive() {
+  return getReviewModeSlugs() !== null;
+}
+
+function buildReviewModeQuery() {
+  const slugs = getReviewModeSlugs();
+  if (!slugs || slugs.length === 0) return null;
+
+  const orConditions = [];
+  slugs.forEach((slug) => {
+    const clean = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const rx = new RegExp(`^${clean}$`, 'i');
+    orConditions.push(
+      { id: rx },
+      { slug: rx },
+      { code: rx },
+      { modelNumber: rx },
+      { catalogCode: rx }
+    );
+  });
+  return { $or: orConditions };
+}
+
+/**
  * Helper to normalize incoming images into [{ url, publicId }]
  */
 function normalizeImages(images) {
@@ -130,6 +166,21 @@ exports.getProducts = async (req, res) => {
       }
     }
 
+    // Apply Review Mode constraint if active
+    if (isReviewModeActive()) {
+      const reviewMatch = buildReviewModeQuery();
+      if (reviewMatch) {
+        if (query.$and) {
+          query.$and.push(reviewMatch);
+        } else if (query.$or) {
+          query.$and = [{ $or: query.$or }, reviewMatch];
+          delete query.$or;
+        } else {
+          Object.assign(query, reviewMatch);
+        }
+      }
+    }
+
     // Determine sorting
     let sortOption = { createdAt: -1 };
     if (sort === 'price-asc') sortOption = { price: 1 };
@@ -190,6 +241,14 @@ exports.getProductsByCategorySlug = async (req, res) => {
       ],
     };
 
+    if (isReviewModeActive()) {
+      const reviewMatch = buildReviewModeQuery();
+      if (reviewMatch) {
+        query.$and = [{ $or: query.$or }, reviewMatch];
+        delete query.$or;
+      }
+    }
+
     const products = await Product.find(query).sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -232,11 +291,24 @@ exports.getProductBySlug = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Related products in the same category
-    const related = await Product.find({
-      category: product.category,
-      _id: { $ne: product._id },
-    }).limit(4);
+    // Related products in the same category (or other approved review products during review mode)
+    let related = [];
+    if (!isReviewModeActive()) {
+      related = await Product.find({
+        category: product.category,
+        _id: { $ne: product._id },
+      }).limit(4);
+    } else {
+      const reviewMatch = buildReviewModeQuery();
+      if (reviewMatch) {
+        related = await Product.find({
+          $and: [
+            { _id: { $ne: product._id } },
+            reviewMatch,
+          ],
+        }).limit(4);
+      }
+    }
 
     res.status(200).json({ success: true, data: product, related });
   } catch (error) {
@@ -276,6 +348,14 @@ exports.createProduct = async (req, res) => {
       application,
       compatibility,
       compatDetails,
+      coolingCapacity,
+      catalogCode,
+      verificationStatus,
+      imageDisclaimer,
+      datasheet,
+      downloads,
+      source,
+      imageManifest,
     } = req.body;
 
     // Required Field Validations
@@ -347,6 +427,14 @@ exports.createProduct = async (req, res) => {
       application: application || '',
       compatibility: Array.isArray(compatibility) ? compatibility : [],
       compatDetails: compatDetails || {},
+      coolingCapacity: coolingCapacity || '',
+      catalogCode: catalogCode || '',
+      verificationStatus: verificationStatus || 'Verified OEM Match',
+      imageDisclaimer: imageDisclaimer || '',
+      datasheet: datasheet || null,
+      downloads: Array.isArray(downloads) ? downloads : [],
+      source: source || null,
+      imageManifest: Array.isArray(imageManifest) ? imageManifest : [],
     });
 
     res.status(201).json({ success: true, data: product });
@@ -401,6 +489,14 @@ exports.updateProduct = async (req, res) => {
       application,
       compatibility,
       compatDetails,
+      coolingCapacity,
+      catalogCode,
+      verificationStatus,
+      imageDisclaimer,
+      datasheet,
+      downloads,
+      source,
+      imageManifest,
     } = req.body;
 
     // Price validation
@@ -433,6 +529,14 @@ exports.updateProduct = async (req, res) => {
     if (compatibility !== undefined) product.compatibility = compatibility;
     if (compatDetails !== undefined) product.compatDetails = compatDetails;
     if (specs !== undefined) product.specs = specs;
+    if (coolingCapacity !== undefined) product.coolingCapacity = coolingCapacity;
+    if (catalogCode !== undefined) product.catalogCode = catalogCode;
+    if (verificationStatus !== undefined) product.verificationStatus = verificationStatus;
+    if (imageDisclaimer !== undefined) product.imageDisclaimer = imageDisclaimer;
+    if (datasheet !== undefined) product.datasheet = datasheet;
+    if (downloads !== undefined) product.downloads = downloads;
+    if (source !== undefined) product.source = source;
+    if (imageManifest !== undefined) product.imageManifest = imageManifest;
 
     if (specifications !== undefined) {
       product.specifications = normalizeSpecifications(specifications, specs);
